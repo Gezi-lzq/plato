@@ -1,6 +1,6 @@
 package main
 
-import "github.com/hardcore-os/plato/cmd"
+import "github.com/Gezi-lzq/plato/cmd"
 
 func main() {
 	cmd.Execute()
