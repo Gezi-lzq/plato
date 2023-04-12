@@ -73,10 +73,17 @@ func (dp *Dispatcher) delNode(event *source.Event) {
 func (dp *Dispatcher) addNode(event *source.Event) {
 	dp.Lock()
 	defer dp.Unlock()
-	ed := NewEndpoint(event.IP, event.Port)
+	var (
+		ed *Endpoint
+		ok bool
+	)
+
+	if ed, ok = dp.candidateTable[event.Key()]; !ok {
+		ed := NewEndpoint(event.IP, event.Port)
+		dp.candidateTable[event.Key()] = ed
+	}
 	ed.UpdateStat(&Stat{
 		ConnectNum:   event.ConnectNum,
 		MessageBytes: event.MessageBytes,
 	})
-	dp.candidateTable[event.Key()] = ed
 }
