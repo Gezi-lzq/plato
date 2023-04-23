@@ -6,3 +6,10 @@ discovery:
   timeout: 5
 ip_conf:
   service_path: /plato/ip_dispatchers
+gateway:
+  tcp_max_num: 10000
+  epoll_channel_num: 100
+  epoll_num: 8
+  epoll_wait_queue_size: 100
+  server_port: 8900
+  worker_pool_num: 1024
