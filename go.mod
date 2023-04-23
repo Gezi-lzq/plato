@@ -46,6 +46,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nsf/termbox-go v1.1.1 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
+	github.com/panjf2000/ants v1.3.0
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
