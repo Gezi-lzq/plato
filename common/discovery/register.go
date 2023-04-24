@@ -4,9 +4,10 @@ import (
 	"context"
 	"log"
 
+	clientv3 "go.etcd.io/etcd/client/v3"
+
 	"github.com/Gezi-lzq/plato/common/config"
 	"github.com/bytedance/gopkg/util/logger"
-	"github.com/coreos/etcd/clientv3"
 )
 
 // ServiceRegister 创建租约注册服务
