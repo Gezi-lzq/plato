@@ -43,7 +43,14 @@ func newConnet(ip net.IP, port int) *connect {
 
 func (c *connect) send(data *Message) {
 	// 直接发送给接收方
-	c.recvChan <- data
+	// 直接发送给接收方
+	bytes, _ := json.Marshal(data)
+	dataPgk := tcp.DataPgk{
+		Data: bytes,
+		Len:  uint32(len(bytes)),
+	}
+	xx := dataPgk.Marshal()
+	c.conn.Write(xx)
 }
 
 func (c *connect) recv() <-chan *Message {
