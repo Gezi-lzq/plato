@@ -21,3 +21,15 @@ func GetGatewayServerPort() int {
 func GetGatewayWorkerPoolNum() int {
 	return viper.GetInt("gateway.worker_pool_num")
 }
+func GetGatewayTCPServerPort() int {
+	return viper.GetInt("gateway.tcp_server_port")
+}
+func GetGatewayRPCServerPort() int {
+	return viper.GetInt("gateway.rpc_server_port")
+}
+func GetGatewayCmdChannelNum() int {
+	return viper.GetInt("gateway.cmd_channel_num")
+}
+func GetGatewayServiceAddr() string {
+	return viper.GetString("gateway.service_addr")
+}
