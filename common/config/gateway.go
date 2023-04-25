@@ -15,9 +15,6 @@ func GetGatewayEpollerNum() int {
 func GetGatewayEpollWaitQueueSize() int {
 	return viper.GetInt("gateway.epoll_wait_queue_size")
 }
-func GetGatewayServerPort() int {
-	return viper.GetInt("gateway.server_port")
-}
 func GetGatewayWorkerPoolNum() int {
 	return viper.GetInt("gateway.worker_pool_num")
 }
@@ -26,6 +23,12 @@ func GetGatewayTCPServerPort() int {
 }
 func GetGatewayRPCServerPort() int {
 	return viper.GetInt("gateway.rpc_server_port")
+}
+func GetGatewayServiceName() string {
+	return viper.GetString("gateway.service_name")
+}
+func GetGatewayRPCWeight() int {
+	return viper.GetInt("gateway.weight")
 }
 func GetGatewayCmdChannelNum() int {
 	return viper.GetInt("gateway.cmd_channel_num")
