@@ -9,11 +9,16 @@ import (
 	"net"
 	"syscall"
 
+	"github.com/Gezi-lzq/plato/common/prpc"
 	"github.com/Gezi-lzq/plato/common/tcp"
 	"github.com/Gezi-lzq/plato/gateway/rpc/client"
+	"github.com/Gezi-lzq/plato/gateway/rpc/service"
+	"google.golang.org/grpc"
 
 	"github.com/Gezi-lzq/plato/common/config"
 )
+
+var cmdChannel chan *service.CmdContext
 
 // RunMain 启动网关服务
 func RunMain(path string) {
@@ -27,12 +32,52 @@ func RunMain(path string) {
 	initEpoll(ln, runProc)
 	fmt.Println("-------------im gateway stated------------")
 	// TODO:创建gateway的RPC server 并注册服务
-
+	cmdChannel = make(chan *service.CmdContext, config.GetGatewayCmdChannelNum())
+	s := prpc.NewPServer(
+		prpc.WithServiceName(config.GetGatewayServiceName()),
+		prpc.WithIP(config.GetGatewayServiceAddr()),
+		prpc.WithPort(config.GetGatewayRPCServerPort()), prpc.WithWeight(config.GetGatewayRPCWeight()))
+	fmt.Println(config.GetGatewayServiceName(), config.GetGatewayServiceAddr(), config.GetGatewayRPCServerPort(), config.GetGatewayRPCWeight())
+	s.RegisterService(func(server *grpc.Server) {
+		service.RegisterGatewayServer(server, &service.Service{CmdChannel: cmdChannel})
+	})
 	// 启动rpc 客户端
 	client.Init()
 	// 启动 命令处理写协程
+	go cmdHandler()
 	// 启动 rpc server
-	select {}
+	s.Start(context.TODO())
+}
+
+func cmdHandler() {
+	for cmd := range cmdChannel {
+		// 异步提交到协池中完成发送任务
+		switch cmd.Cmd {
+		case service.DelConnCmd:
+			wPool.Submit(func() { closeConn(cmd) })
+		case service.PushCmd:
+			wPool.Submit(func() { sendMsgByCmd(cmd) })
+		default:
+			panic("command undefined")
+		}
+	}
+}
+func closeConn(cmd *service.CmdContext) {
+	if connPtr, ok := EpollerPool.tables.Load(cmd.FD); ok {
+		conn, _ := connPtr.(*connection)
+		conn.Close()
+		EpollerPool.tables.Delete(cmd.FD)
+	}
+}
+func sendMsgByCmd(cmd *service.CmdContext) {
+	if connPtr, ok := EpollerPool.tables.Load(cmd.FD); ok {
+		conn, _ := connPtr.(*connection)
+		dp := tcp.DataPgk{
+			Len:  uint32(len(cmd.Playload)),
+			Data: cmd.Playload,
+		}
+		tcp.SendData(conn.conn, dp.Marshal())
+	}
 }
 
 func initEpoll(ln *net.TCPListener, f func(c *connection, ep *epoller)) {

@@ -5,7 +5,7 @@ option go_package = "./;service";
 package service;
 // 网关机的 rpc server定义
 // cd state/rpc 下 
-// 执行 protoc --proto_path=service --go_out=service --go-grpc_out=service service/state.proto
+// 执行 protoc --proto_path=service --go_out=service --go-grpc_out=require_unimplemented_servers=false:service service/state.proto
 service state {
     rpc CancelConn (StateRequest) returns (StateResponse);
     rpc SendMsg (StateRequest) returns (StateResponse);

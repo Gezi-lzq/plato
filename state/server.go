@@ -6,6 +6,7 @@ import (
 
 	"github.com/Gezi-lzq/plato/common/config"
 	"github.com/Gezi-lzq/plato/common/prpc"
+	"github.com/Gezi-lzq/plato/state/rpc/client"
 	"github.com/Gezi-lzq/plato/state/rpc/service"
 	"google.golang.org/grpc"
 )
@@ -26,7 +27,7 @@ func RunMain(path string) {
 		service.RegisterStateServer(server, &service.Service{CmdChannel: cmdChannel})
 	})
 	// 初始化RPC 客户端
-
+	client.Init()
 	// 启动 命令处理写协程
 	go cmdHandler()
 	// 启动 rpc server
@@ -40,6 +41,7 @@ func cmdHandler() {
 			fmt.Printf("cancelconn endpoint:%s, fd:%d, data:%+v", cmd.Endpoint, cmd.FD, cmd.Playload)
 		case service.SendMsgCmd:
 			fmt.Println("cmdHandler", string(cmd.Playload))
+			client.Push(cmd.Ctx, int32(cmd.FD), cmd.Playload)
 		}
 	}
 }

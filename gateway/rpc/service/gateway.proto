@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "./;service";
+
+package service;
+// 网关机的 rpc server定义
+// cd gateway/rpc 下 
+// 执行 protoc --proto_path=service --go_out=service --go-grpc_out=require_unimplemented_servers=false:service service/gateway.proto
+service Gateway {
+  rpc DelConn (GatewayRequest) returns (GatewayResponse);
+  rpc Push (GatewayRequest) returns (GatewayResponse);
+}
+
+message GatewayRequest{
+  int32 fd = 1;
+  bytes data = 2;
+}
+
+message GatewayResponse {
+  int32 code = 1;
+  string msg = 2;
+}
