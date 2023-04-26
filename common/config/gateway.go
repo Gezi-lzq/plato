@@ -36,3 +36,9 @@ func GetGatewayCmdChannelNum() int {
 func GetGatewayServiceAddr() string {
 	return viper.GetString("gateway.service_addr")
 }
+func GetGatewayRPCProtocol() string {
+	return viper.GetString("gateway.rpc_protocol")
+}
+func GetGatewayRPCSockAdd() string {
+	return viper.GetString("gateway.rpc_protocol")
+}

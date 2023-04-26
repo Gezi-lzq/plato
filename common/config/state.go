@@ -17,3 +17,9 @@ func GetStateServerPort() int {
 func GetStateRPCWeight() int {
 	return viper.GetInt("state.weight")
 }
+func GetStateRPCProtocol() string {
+	return viper.GetString("state.rpc_protocol")
+}
+func GetStateRPCSockAdd() string {
+	return viper.GetString("state.rpc_protocol")
+}
