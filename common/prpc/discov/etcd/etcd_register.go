@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -123,7 +122,7 @@ func (r *Register) registerService(ctx context.Context, service *registerService
 	service.leaseID = leaseGrantResp.ID
 
 	for _, endpoint := range service.service.Endpoints {
-		key := r.getEtcdRegisterKey(service.service.Name, endpoint.IP, endpoint.Port)
+		key := r.getEtcdRegisterKey(service.service.Name, endpoint.GetAddr())
 		raw, err := json.Marshal(endpoint)
 		if err != nil {
 			logger.CtxErrorf(ctx, "register service err,err:%v, register data:%v", err, string(raw))
@@ -154,8 +153,8 @@ func (r *Register) unRegisterService(ctx context.Context, service *discov.Servic
 	for _, endpoint := range r.registerServices[service.Name].service.Endpoints {
 		var isRemove bool
 		for _, unRegisterEndpoint := range service.Endpoints {
-			if endpoint.IP == unRegisterEndpoint.IP && endpoint.Port == unRegisterEndpoint.Port {
-				_, err := r.cli.Delete(context.TODO(), r.getEtcdRegisterKey(service.Name, endpoint.IP, endpoint.Port))
+			if endpoint.GetAddr() == unRegisterEndpoint.GetAddr() {
+				_, err := r.cli.Delete(context.TODO(), r.getEtcdRegisterKey(service.Name, endpoint.GetAddr()))
 				if err != nil {
 					logger.CtxErrorf(ctx, "UnRegisterService etcd del err, service %v was not registered", service.Name)
 				}
@@ -252,7 +251,8 @@ func (r *Register) watch(ctx context.Context, key string, revision int64) {
 				if err := json.Unmarshal(ev.Kv.Value, &endpoint); err != nil {
 					continue
 				}
-				serviceName, _, _ := r.getServiceNameByETCDKey(string(ev.Kv.Key))
+				serviceName, _ := r.getServiceNameByETCDKey(string(ev.Kv.Key))
+
 				r.updateDownService(&discov.Service{
 					Name:      serviceName,
 					Endpoints: []*discov.Endpoint{&endpoint},
@@ -262,16 +262,13 @@ func (r *Register) watch(ctx context.Context, key string, revision int64) {
 				if err := json.Unmarshal(ev.Kv.Value, &endpoint); err != nil {
 					continue
 				}
-				serviceName, ip, Port := r.getServiceNameByETCDKey(string(ev.Kv.Key))
+				serviceName, address := r.getServiceNameByETCDKey(string(ev.Kv.Key))
+				endpoint1 := discov.InitEndpointByAddr(address)
 				r.delDownService(&discov.Service{
-					Name: serviceName,
-					Endpoints: []*discov.Endpoint{
-						{
-							IP:   ip,
-							Port: Port,
-						},
-					},
+					Name:      serviceName,
+					Endpoints: []*discov.Endpoint{endpoint1},
 				})
+
 			}
 		}
 	}
@@ -291,7 +288,7 @@ func (r *Register) updateDownService(service *discov.Service) {
 	for _, newAddEndpoint := range service.Endpoints {
 		var isExist bool
 		for idx, endpoint := range downServices[service.Name].Endpoints {
-			if newAddEndpoint.IP == endpoint.IP && newAddEndpoint.Port == endpoint.Port {
+			if newAddEndpoint.GetAddr() == endpoint.GetAddr() {
 				downServices[service.Name].Endpoints[idx] = newAddEndpoint
 				isExist = true
 				break
@@ -321,7 +318,7 @@ func (r *Register) delDownService(service *discov.Service) {
 	for _, endpoint := range downServices[service.Name].Endpoints {
 		var isRemove bool
 		for _, delEndpoint := range service.Endpoints {
-			if delEndpoint.IP == endpoint.IP && delEndpoint.Port == endpoint.Port {
+			if delEndpoint.GetAddr() == endpoint.GetAddr() {
 				isRemove = true
 				break
 			}
@@ -347,18 +344,16 @@ func (r *Register) getDownServices() map[string]*discov.Service {
 	return allServices.(map[string]*discov.Service)
 }
 
-func (r *Register) getEtcdRegisterKey(name, ip string, port int) string {
-	return fmt.Sprintf(KeyPrefix+"%v/%v/%v", name, ip, port)
+func (r *Register) getEtcdRegisterKey(name, address string) string {
+	return fmt.Sprintf(KeyPrefix+"%v/%v", name, address)
 }
 
 func (r *Register) getEtcdRegisterPrefixKey(name string) string {
 	return fmt.Sprintf(KeyPrefix+"%v", name)
 }
 
-func (r *Register) getServiceNameByETCDKey(key string) (string, string, int) {
+func (r *Register) getServiceNameByETCDKey(key string) (string, string) {
 	trimStr := strings.TrimPrefix(key, KeyPrefix)
 	strs := strings.Split(trimStr, "/")
-
-	ip, _ := strconv.Atoi(strs[2])
-	return strs[0], strs[1], ip
+	return strs[0], strs[1]
 }

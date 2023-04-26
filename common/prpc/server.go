@@ -3,6 +3,7 @@ package prpc
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -28,6 +29,8 @@ type PServer struct {
 
 type serverOptions struct {
 	serviceName string
+	protocol    string
+	sockAddr    string
 	ip          string
 	port        int
 	weight      int
@@ -41,6 +44,20 @@ type ServerOption func(opts *serverOptions)
 func WithServiceName(serviceName string) ServerOption {
 	return func(opts *serverOptions) {
 		opts.serviceName = serviceName
+	}
+}
+
+// WithProtocol set tcp
+func WithProtocol(protocol string) ServerOption {
+	return func(opts *serverOptions) {
+		opts.protocol = protocol
+	}
+}
+
+// WithTcp set sockAddr （uds）
+func WithSockAddr(sockAddr string) ServerOption {
+	return func(opts *serverOptions) {
+		opts.sockAddr = sockAddr
 	}
 }
 
@@ -117,6 +134,8 @@ func (p *PServer) Start(ctx context.Context) {
 				ServerName: p.serviceName,
 				IP:         p.ip,
 				Port:       p.port,
+				Protocol:   p.protocol,
+				SockAddr:   p.sockAddr,
 				Weight:     p.weight,
 				Enable:     true,
 			},
@@ -138,7 +157,7 @@ func (p *PServer) Start(ctx context.Context) {
 		register(s)
 	}
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", p.ip, p.port))
+	lis, err := getListen(p.protocol, fmt.Sprintf("%s:%d", p.ip, p.port), p.sockAddr)
 	if err != nil {
 		panic(err)
 	}
@@ -169,4 +188,20 @@ func (p *PServer) Start(ctx context.Context) {
 		}
 	}
 
+}
+
+func getListen(protocol, TCPAddr, sockAddr string) (net.Listener, error) {
+	switch protocol {
+	case "tcp", "tcp4", "tcp6":
+		return net.Listen("tcp", TCPAddr)
+	case "unix", "unixgram", "unixpacket":
+		if _, err := os.Stat(sockAddr); !os.IsNotExist(err) {
+			if err := os.RemoveAll(sockAddr); err != nil {
+				log.Fatal(err)
+			}
+		}
+		return net.Listen(protocol, sockAddr)
+	default:
+		return nil, net.UnknownNetworkError(protocol)
+	}
 }

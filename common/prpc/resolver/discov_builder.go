@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Gezi-lzq/plato/common/prpc/discov"
 	"google.golang.org/grpc/attributes"
@@ -33,7 +32,7 @@ func (d *DiscovBuilder) Build(target resolver.Target, cc resolver.ClientConn, _ 
 		for _, item := range service.Endpoints {
 			attr := attributes.New("weight", item.Weight)
 			addr := resolver.Address{
-				Addr:       fmt.Sprintf("%s:%d", item.IP, item.Port),
+				Addr:       item.GetAddr(),
 				Attributes: attr,
 			}
 
