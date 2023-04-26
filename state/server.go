@@ -19,9 +19,10 @@ func RunMain(path string) {
 	cmdChannel = make(chan *service.CmdContext, config.GetStateCmdChannelNum())
 
 	s := prpc.NewPServer(
+		prpc.WithSockAddr(config.GetStateRPCProtocol()),
+		prpc.WithProtocol(config.GetStateRPCSockAdd()),
+
 		prpc.WithServiceName(config.GetStateServiceName()),
-		prpc.WithIP(config.GetStateServiceAddr()),
-		prpc.WithPort(config.GetStateServerPort()),
 		prpc.WithWeight(config.GetStateRPCWeight()))
 	s.RegisterService(func(server *grpc.Server) {
 		service.RegisterStateServer(server, &service.Service{CmdChannel: cmdChannel})
@@ -40,7 +41,7 @@ func cmdHandler() {
 		case service.CancelConnCmd:
 			fmt.Printf("cancelconn endpoint:%s, fd:%d, data:%+v", cmd.Endpoint, cmd.FD, cmd.Playload)
 		case service.SendMsgCmd:
-			fmt.Println("cmdHandler", string(cmd.Playload))
+			fmt.Println("cmdHandler", int32(cmd.FD), string(cmd.Playload))
 			client.Push(cmd.Ctx, int32(cmd.FD), cmd.Playload)
 		}
 	}
