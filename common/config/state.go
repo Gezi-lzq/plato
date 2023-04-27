@@ -21,5 +21,5 @@ func GetStateRPCProtocol() string {
 	return viper.GetString("state.rpc_protocol")
 }
 func GetStateRPCSockAdd() string {
-	return viper.GetString("state.rpc_protocol")
+	return viper.GetString("state.rpc_sockAddr")
 }

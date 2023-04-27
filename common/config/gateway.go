@@ -40,5 +40,5 @@ func GetGatewayRPCProtocol() string {
 	return viper.GetString("gateway.rpc_protocol")
 }
 func GetGatewayRPCSockAdd() string {
-	return viper.GetString("gateway.rpc_protocol")
+	return viper.GetString("gateway.rpc_sockAddr")
 }

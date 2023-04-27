@@ -34,8 +34,8 @@ func RunMain(path string) {
 	// TODO:创建gateway的RPC server 并注册服务
 	cmdChannel = make(chan *service.CmdContext, config.GetGatewayCmdChannelNum())
 	s := prpc.NewPServer(
-		prpc.WithProtocol(config.GetGatewayRPCSockAdd()),
-		prpc.WithSockAddr(config.GetGatewayRPCProtocol()),
+		prpc.WithProtocol(config.GetGatewayRPCProtocol()),
+		prpc.WithSockAddr(config.GetGatewayRPCSockAdd()),
 
 		prpc.WithServiceName(config.GetGatewayServiceName()),
 		prpc.WithIP(config.GetGatewayServiceAddr()),

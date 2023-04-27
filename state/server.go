@@ -19,8 +19,8 @@ func RunMain(path string) {
 	cmdChannel = make(chan *service.CmdContext, config.GetStateCmdChannelNum())
 
 	s := prpc.NewPServer(
-		prpc.WithSockAddr(config.GetStateRPCProtocol()),
-		prpc.WithProtocol(config.GetStateRPCSockAdd()),
+		prpc.WithProtocol(config.GetStateRPCProtocol()),
+		prpc.WithSockAddr(config.GetStateRPCSockAdd()),
 
 		prpc.WithServiceName(config.GetStateServiceName()),
 		prpc.WithWeight(config.GetStateRPCWeight()))
